@@ -19,11 +19,12 @@ public class TestHwpTextExtractor {
 		files.add(getResourceFile("v5/han_special_char.hwp"));
 		
 		for(File file : files){
-			Writer writer = new StringWriter();
-			HwpTextExtractor.extract(file, writer);
+			HwpFile hwpFile = new HwpFile(file);
 			
-			String text = writer.toString();
-			System.out.println(text);
+			if(hwpFile.canRead()){
+				String text = hwpFile.getText();
+				System.out.println(text);
+			}
 		}
 	}
 	
