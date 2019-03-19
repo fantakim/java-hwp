@@ -167,6 +167,8 @@ public abstract class HwpTextExtractorV5 {
 		log.debug("Flags={}", Long.toBinaryString(flags).replace(' ', '0'));
 
 		fileHeader.compressed = (flags & 0x01) == 0x01;
+		
+		// TODO: 암호화 된 문서는 읽기 불가 (FileHeader를 외부로 노출 시켜야함)
 		fileHeader.encrypted = (flags & 0x02) == 0x02;
 		fileHeader.viewtext = (flags & 0x04) == 0x04;
 
@@ -370,8 +372,7 @@ public abstract class HwpTextExtractorV5 {
 			}
 
 			if (buf.length() > 0) {
-				log.debug("TAG[{}]({}):{} [{}]", new Object[] { tag.id,
-						tag.level, tag.length, buf });
+				//log.debug("TAG[{}]({}):{} [{}]", new Object[] { tag.id, tag.level, tag.length, buf });
 			}
 		}
 	}
