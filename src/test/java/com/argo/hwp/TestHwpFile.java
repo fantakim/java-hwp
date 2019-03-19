@@ -3,15 +3,13 @@ package com.argo.hwp;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 
 import org.junit.Test;
 
-public class TestHwpTextExtractor {
+public class TestHwpFile {
 	@Test
-	public void testExtract() throws FileNotFoundException, IOException {
+	public void testHwpFiles() throws FileNotFoundException, IOException {
 		ArrayList<File> files = new ArrayList<File>();
 		files.add(getResourceFile("v3/4e00-62ff.hwp"));
 		files.add(getResourceFile("v3/han_special_char_3.0.hwp"));
