@@ -7,7 +7,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 
 public class HwpFile {
-	private boolean canRead;
+	private boolean readSuccess;
 	private String text;
 	private HwpSummary summary; 
 
@@ -17,15 +17,15 @@ public class HwpFile {
 	
 	public HwpFile(File file) throws FileNotFoundException, IOException{
 		Writer writer = new StringWriter();
-		boolean success = canRead = HwpTextExtractor.extract(file, writer);
+		boolean success = readSuccess = HwpTextExtractor.extract(file, writer);
 		if (success) {
 			text = writer.toString();
 			summary = new HwpSummary();	
 		}
 	}
 	
-	public boolean canRead() {
-		return canRead;
+	public boolean readSuccess() {
+		return readSuccess;
 	}
 	
 	public String getText() {

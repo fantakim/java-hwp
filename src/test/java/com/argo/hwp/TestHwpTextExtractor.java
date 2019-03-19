@@ -21,7 +21,7 @@ public class TestHwpTextExtractor {
 		for(File file : files){
 			HwpFile hwpFile = new HwpFile(file);
 			
-			if(hwpFile.canRead()){
+			if(hwpFile.readSuccess()){
 				String text = hwpFile.getText();
 				System.out.println(text);
 			}
