@@ -62,13 +62,12 @@ public abstract class HwpTextExtractorV3 {
 				if (!Arrays.equals(HWP_V3_SIGNATURE, buf))
 					return false;
 			} catch (IOException e) {
-				log.warn("파일정보 확인 중 오류. HWP 포맷이 아닌 것으로 간주함", e);
+				log.error("파일정보 확인 중 오류. HWP 포맷이 아닌 것으로 간주함", e);
 				return false;
 			}
 
-			extractText(input, writer);
+			return extractText(input, writer);
 
-			return true;
 		} finally {
 			try {
 				// from javadoc. If this file has an associated channel then the
@@ -80,7 +79,7 @@ public abstract class HwpTextExtractorV3 {
 		}
 	}
 
-	private static void extractText(InputStream inputStream, Writer writer)
+	private static boolean extractText(InputStream inputStream, Writer writer)
 			throws IOException {
 		// 시그니처를 위해서 30바이트 읽은 상태
 
@@ -91,8 +90,10 @@ public abstract class HwpTextExtractorV3 {
 		// 암호 걸린 파일 확인
 		input.ensureSkip(96);
 		int t = input.uint16();
-		if (t != 0)
-			throw new IOException("암호화된 문서는 해석할 수 없습니다");
+		if (t != 0) {
+			log.error("암호화된 문서는 해석할 수 없습니다");
+			return false;
+		}
 
 		// 압축 확인
 		input.ensureSkip(26); // 124
@@ -130,6 +131,8 @@ public abstract class HwpTextExtractorV3 {
 			if (!writeParaText(input, writer))
 				break;
 		}
+		
+		return true;
 	}
 
 	private static boolean writeParaText(HwpStreamReader input, Writer writer)

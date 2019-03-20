@@ -55,3 +55,39 @@ public abstract class HwpTextExtractor {
 		return success;
 	}
 }
+
+/*
+	private static HwpSummary getSummary(NPOIFSFileSystem fs) throws IOException {
+		HwpSummary summary = new HwpSummary();
+		
+		try {
+			DocumentInputStream documentInputStream = fs.createDocumentInputStream("HwpSummaryInformation");
+			PropertySet propertySet = PropertySetFactory.create((InputStream) documentInputStream);
+			documentInputStream.close();
+			
+			for (Property property : propertySet.getSections().get(0).getProperties()) {
+				long id = property.getID();
+				String value = String.valueOf(property.getValue());
+				
+				if (id == 2L)
+					summary.setTitle(value);
+				if (id == 3L)
+					summary.setSubject(value);
+				if (id == 4L)
+					summary.setAuthor(value);
+				if (id == 5L)
+					summary.setKeyword(value);
+				if (id == 6L)
+					summary.setComment(value);
+				if (id == 20L)
+					summary.setCreatetime(value);
+			}
+		} catch (NoPropertySetStreamException | MarkUnsupportedException e) {
+			e.printStackTrace();
+		} finally {
+			
+		}
+		
+		return summary;
+	}
+ */

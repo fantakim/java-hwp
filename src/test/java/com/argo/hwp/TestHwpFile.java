@@ -19,7 +19,7 @@ public class TestHwpFile {
 		for(File file : files){
 			HwpFile hwpFile = new HwpFile(file);
 			
-			if(hwpFile.readSuccess()){
+			if(hwpFile.valid()){
 				String text = hwpFile.getText();
 				System.out.println(text);
 			}
@@ -31,7 +31,7 @@ public class TestHwpFile {
 		File largefile = new File("d:\\회의록_20100601_산출물제출일정협의.hwp");
 		HwpFile hwpFile = new HwpFile(largefile);
 		
-		if(hwpFile.readSuccess()){
+		if(hwpFile.valid()){
 			String text = hwpFile.getText();
 			System.out.println(text);
 		}
