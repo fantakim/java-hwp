@@ -19,6 +19,7 @@ HWP 5.0 버전의 Compound File은 [Apache-POI의 POIFS File System](http://poi.
     String text = writer.toString(); // 추출된 텍스트
 
 ## 작업
-- [x] HwpFile Wrapper Class
+- [x] HwpFile
+- [ ] HwpReader
 - [ ] HwpFile -> encrypted, compressed, etc
 - [ ] HwpFile -> summaryinformation
