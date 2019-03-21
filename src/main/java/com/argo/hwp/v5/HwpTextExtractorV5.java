@@ -28,11 +28,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
@@ -42,6 +44,12 @@ import javax.crypto.CipherInputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.poi.hpsf.MarkUnsupportedException;
+import org.apache.poi.hpsf.NoPropertySetStreamException;
+import org.apache.poi.hpsf.Property;
+import org.apache.poi.hpsf.PropertySet;
+import org.apache.poi.hpsf.PropertySetFactory;
+import org.apache.poi.hpsf.SummaryInformation;
 import org.apache.poi.poifs.filesystem.DirectoryEntry;
 import org.apache.poi.poifs.filesystem.DirectoryNode;
 import org.apache.poi.poifs.filesystem.DocumentEntry;
@@ -53,6 +61,7 @@ import org.apache.poi.util.LittleEndian;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.argo.hwp.HwpFile;
 import com.argo.hwp.utils.HwpStreamReader;
 
 public abstract class HwpTextExtractorV5 {
@@ -71,6 +80,64 @@ public abstract class HwpTextExtractorV5 {
 
 	private static final int HWPTAG_BEGIN = 0x010;
 
+	
+	/**
+	 * HWP 파일에서 HwpFile 추출
+	 * @param source
+	 * @return
+	 * @throws IOException
+	 */
+	public static HwpFile extract(File source) throws IOException {
+		if (source == null)
+			throw new IllegalArgumentException();
+		if (!source.exists())
+			throw new FileNotFoundException();
+		
+		HwpFile hwp = new HwpFile();
+		NPOIFSFileSystem fs = null;
+		
+		try {
+			fs = new NPOIFSFileSystem(source);
+			
+			// 파일헤더
+			FileHeader header = getHeader(fs);
+			hwp.header(header.compressed, header.encrypted);
+
+			// 요약정보
+			SummaryInformation si = getSummaryInformation(fs);
+			hwp.summary(si.getTitle(), si.getSubject(), si.getAuthor(), si.getKeywords(), si.getComments(), si.getTemplate());
+			
+			if (header.encrypted) {
+				hwp.error("암호화된 문서는 해석할 수 없습니다");
+				return hwp;
+			}
+			
+			Writer writer = new StringWriter();
+			
+			if (header.viewtext) {
+				extractViewText(header, fs, writer); // 배포용 문서
+			} else {
+				extractBodyText(header, fs, writer);
+			}
+			
+			hwp.text(writer.toString());
+			
+		} catch (IOException e) {
+			hwp.error(e.getMessage());
+			return hwp;
+		} finally {
+			if (fs != null) {
+				try {
+					fs.close();
+				} catch (IOException e) {
+					log.warn("Exception", e);
+				}
+			}
+		}
+		
+		return hwp;
+	}
+	
 	/**
 	 * HWP 파일에서 텍스트 추출
 	 * 
@@ -96,13 +163,16 @@ public abstract class HwpTextExtractorV5 {
 				// 우선은 Compound File
 				fs = new NPOIFSFileSystem(source);
 				header = getHeader(fs);
+				
+				if (header.encrypted) {
+					log.error("암호화된 문서는 해석할 수 없습니다");
+					return false;
+				}
+				
 			} catch (IOException e) {
 				log.warn("파일정보 확인 중 오류. HWP 포맷이 아닌 것으로 간주함", e);
 				return false;
 			}
-
-			if (header == null)
-				return false;
 
 			// 여기까지 왔다면 HWP 문서가 맞다고 본다
 			// 이제부터의 IOException 은 HWP 읽는 중 오류이다.
@@ -167,14 +237,46 @@ public abstract class HwpTextExtractorV5 {
 		log.debug("Flags={}", Long.toBinaryString(flags).replace(' ', '0'));
 
 		fileHeader.compressed = (flags & 0x01) == 0x01;
-		
-		// TODO: 암호화 된 문서는 읽기 불가 (FileHeader를 외부로 노출 시켜야함)
 		fileHeader.encrypted = (flags & 0x02) == 0x02;
 		fileHeader.viewtext = (flags & 0x04) == 0x04;
 
 		return fileHeader;
 	}
 
+	/**
+	 * HWP 파일에서 SummaryInformation 추출
+	 * @param fs
+	 * @return
+	 * @throws IOException
+	 */
+	private static SummaryInformation getSummaryInformation(NPOIFSFileSystem fs) throws IOException {
+		SummaryInformation si = PropertySetFactory.newSummaryInformation();
+
+		try {
+			DocumentInputStream documentInputStream = fs.createDocumentInputStream("HwpSummaryInformation");
+			PropertySet propertySet;
+			try {
+				propertySet = PropertySetFactory.create((InputStream)documentInputStream);
+				for (Property property : propertySet.getSections().get(0).getProperties()) {
+					long id = property.getID();
+					String value = String.valueOf(property.getValue());
+					
+					if (id == 2L) si.setTitle(value);
+					if (id == 3L) si.setSubject(value);
+					if (id == 4L) si.setAuthor(value);
+					if (id == 5L) si.setKeywords(value);
+					if (id == 6L) si.setComments(value);
+					if (id == 20L) si.setTemplate(value); // CreateDateTime 대신
+				}
+			} catch (NoPropertySetStreamException | MarkUnsupportedException e) {
+				e.printStackTrace();
+			}
+		} finally {
+		}
+		
+		return si;
+	}
+	
 	/**
 	 * 텍스트 추출
 	 * 

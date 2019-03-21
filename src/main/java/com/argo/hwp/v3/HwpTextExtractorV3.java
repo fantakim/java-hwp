@@ -28,14 +28,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
+import org.apache.poi.hpsf.PropertySetFactory;
+import org.apache.poi.hpsf.SummaryInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.argo.hwp.HwpFile;
 import com.argo.hwp.utils.HwpStreamReader;
 
 public abstract class HwpTextExtractorV3 {
@@ -46,6 +50,79 @@ public abstract class HwpTextExtractorV3 {
 	private static final byte[] HWP_V3_SIGNATURE = ("HWP Document File V3.00"
 			+ " \u001A\u0001\u0002\u0003\u0004\u0005").getBytes();
 
+	public static HwpFile extract(File source) throws IOException {
+		HwpFile hwp = new HwpFile();
+		InputStream input = new FileInputStream(source);
+		
+		try {
+			// 한글V3 시그니처 확인
+			try {
+				byte[] buf = new byte[HWP_V3_SIGNATURE.length];
+				int read = input.read(buf);
+				if (read < HWP_V3_SIGNATURE.length) {
+					hwp.error("파일정보 확인 중 오류. HWP 포맷이 아닌 것으로 간주함");
+					return hwp;
+				}
+
+				// 시그니처 확인
+				if (!Arrays.equals(HWP_V3_SIGNATURE, buf)) {
+					hwp.error("파일정보 확인 중 오류. HWP 포맷이 아닌 것으로 간주함");
+					return hwp;
+				}
+			} catch (IOException e) {
+				hwp.error(e.getMessage());
+				return hwp;
+			}
+
+			// 파일헤더
+			FileHeader header = getHeader(input);
+			hwp.header(header.compressed, header.encrypted);
+			
+			// TODO: 요약정보
+			SummaryInformation si = PropertySetFactory.newSummaryInformation();
+			hwp.summary(si.getTitle(), si.getSubject(), si.getAuthor(), si.getKeywords(), si.getComments(), si.getTemplate());
+
+			if (header.encrypted) {
+				hwp.error("암호화된 문서는 해석할 수 없습니다");
+				return hwp;
+			}
+			
+			Writer writer = new StringWriter();
+			boolean success = extractText(input, writer);
+			if (success) {
+				hwp.text(writer.toString());
+			}
+
+		} finally {
+			try {
+				input.close();
+			} catch (IOException e) {
+				log.warn("exception while file.close", e);
+			}
+		}		
+		
+		return hwp;
+	}
+	
+	private static FileHeader getHeader(InputStream inputStream) throws IOException {
+		FileHeader fileHeader = new FileHeader();
+		HwpStreamReader input = new HwpStreamReader(inputStream);
+		
+		// 암호 걸린 파일 확인
+		input.ensureSkip(96);
+		int t = input.uint16();
+		if (t != 0) {
+			fileHeader.encrypted = true;
+		}
+
+		// 압축 확인
+		input.ensureSkip(26); // 124
+		boolean compressed = input.uint8() != 0;
+		fileHeader.compressed = compressed;
+		
+		return fileHeader;
+	}
+	
 	public static boolean extractText(File source, Writer writer)
 			throws IOException {
 		InputStream input = new FileInputStream(source);
@@ -302,4 +379,31 @@ public abstract class HwpTextExtractorV3 {
 	private static String unknown(int c) {
 		return String.format("?+0x%1$04x", c);
 	}
+	
+	static class FileHeader {
+		HwpVersion version;
+		boolean compressed; // bit 0
+		boolean encrypted; // bit 1
+		boolean viewtext; // bit 2
+	}
+
+	static class HwpVersion {
+		int m;
+		int n;
+		int p;
+		int r;
+
+		public String toString() {
+			return String.format("%d.%d.%d.%d", m, n, p, r);
+		}
+
+		public static HwpVersion parseVersion(long longVersion) {
+			HwpVersion version = new HwpVersion();
+			version.m = (int) ((longVersion & 0xFF000000L) >> 24);
+			version.n = (int) ((longVersion & 0x00FF0000L) >> 16);
+			version.p = (int) ((longVersion & 0x0000FF00L) >> 8);
+			version.r = (int) ((longVersion & 0x000000FFL));
+			return version;
+		}
+	}	
 }
