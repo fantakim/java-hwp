@@ -20,6 +20,6 @@ HWP 5.0 버전의 Compound File은 [Apache-POI의 POIFS File System](http://poi.
 
 ## 작업
 - [x] HwpFile
-- [ ] HwpReader
-- [ ] HwpFile -> encrypted, compressed, etc
-- [ ] HwpFile -> summaryinformation
+- [x] HwpReader
+- [x] HwpFile -> encrypted, compressed, etc
+- [ ] HwpFile -> summaryinformation (v3.0)
