@@ -87,17 +87,12 @@ public abstract class HwpTextExtractorV5 {
 	 * @return
 	 * @throws IOException
 	 */
-	public static HwpFile extract(File source) throws IOException {
-		if (source == null)
-			throw new IllegalArgumentException();
-		if (!source.exists())
-			throw new FileNotFoundException();
-		
+	public static HwpFile extract(InputStream stream) throws IOException {
 		HwpFile hwp = new HwpFile();
 		NPOIFSFileSystem fs = null;
 		
 		try {
-			fs = new NPOIFSFileSystem(source);
+			fs = new NPOIFSFileSystem(stream);
 			
 			// 파일헤더
 			FileHeader header = getHeader(fs);

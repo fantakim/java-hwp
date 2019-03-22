@@ -50,15 +50,14 @@ public abstract class HwpTextExtractorV3 {
 	private static final byte[] HWP_V3_SIGNATURE = ("HWP Document File V3.00"
 			+ " \u001A\u0001\u0002\u0003\u0004\u0005").getBytes();
 
-	public static HwpFile extract(File source) throws IOException {
+	public static HwpFile extract(InputStream stream) throws IOException {
 		HwpFile hwp = new HwpFile();
-		InputStream input = new FileInputStream(source);
 		
 		try {
 			// 한글V3 시그니처 확인
 			try {
 				byte[] buf = new byte[HWP_V3_SIGNATURE.length];
-				int read = input.read(buf);
+				int read = stream.read(buf);
 				if (read < HWP_V3_SIGNATURE.length) {
 					hwp.error("파일정보 확인 중 오류. HWP 포맷이 아닌 것으로 간주함");
 					return hwp;
@@ -75,7 +74,7 @@ public abstract class HwpTextExtractorV3 {
 			}
 
 			// 파일헤더
-			FileHeader header = getHeader(input);
+			FileHeader header = getHeader(stream);
 			hwp.header(header.compressed, header.encrypted);
 			
 			// TODO: 요약정보
@@ -88,17 +87,12 @@ public abstract class HwpTextExtractorV3 {
 			}
 			
 			Writer writer = new StringWriter();
-			boolean success = extractText(input, writer);
+			boolean success = extractText(stream, writer);
 			if (success) {
 				hwp.text(writer.toString());
 			}
 
 		} finally {
-			try {
-				input.close();
-			} catch (IOException e) {
-				log.warn("exception while file.close", e);
-			}
 		}		
 		
 		return hwp;
