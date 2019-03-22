@@ -85,14 +85,15 @@ public abstract class HwpTextExtractorV3 {
 				hwp.error("암호화된 문서는 해석할 수 없습니다");
 				return hwp;
 			}
-			
+
 			Writer writer = new StringWriter();
-			boolean success = extractText(stream, writer);
+			boolean success = extractText2(stream, writer, header);
 			if (success) {
 				hwp.text(writer.toString());
 			}
 
 		} finally {
+			stream.close();
 		}		
 		
 		return hwp;
@@ -136,7 +137,7 @@ public abstract class HwpTextExtractorV3 {
 				log.error("파일정보 확인 중 오류. HWP 포맷이 아닌 것으로 간주함", e);
 				return false;
 			}
-
+			
 			return extractText(input, writer);
 
 		} finally {
@@ -150,6 +151,47 @@ public abstract class HwpTextExtractorV3 {
 		}
 	}
 
+	private static boolean extractText2(InputStream inputStream, Writer writer, FileHeader header)
+			throws IOException {
+		// 시그니처를 위해서 30바이트 읽은 상태
+
+		HwpStreamReader input = new HwpStreamReader(inputStream);
+
+		// 정보 블럭 길이
+		input.ensureSkip(1);
+		int blockSize = input.uint16();
+
+		// 문서 요약 건너뛰기
+		input.ensureSkip(1008);
+		// 정보 블럭 건너뛰기
+		input.ensureSkip(blockSize);
+
+		// 압축 풀기
+		if (header.compressed) {
+			log.info("본문 압축 해제");
+			input = new HwpStreamReader(new InflaterInputStream(inputStream,
+					new Inflater(true)));
+		}
+
+		// p.73 글꼴이름 건너뛰기
+		for (int ii = 0; ii < 7; ii++)
+			input.ensureSkip(input.uint16() * 40);
+
+		// p.74 스타일 건너뛰기
+		input.ensureSkip(input.uint16() * (20 + 31 + 187));
+
+		// <문단 리스트> ::= <문단>+ <빈문단>
+		// int paraCount = 0;
+		while (input.available()) {
+			// paraCount++;
+			// log.debug("문단 {}", paraCount);
+			if (!writeParaText(input, writer))
+				break;
+		}
+		
+		return true;
+	}	
+	
 	private static boolean extractText(InputStream inputStream, Writer writer)
 			throws IOException {
 		// 시그니처를 위해서 30바이트 읽은 상태

@@ -24,16 +24,28 @@ public class HwpReader {
 			throw new FileNotFoundException();
 		
 		InputStream stream = new FileInputStream(source);
-		return from(stream);
+		
+		// TODO: 버전 판단해줄것
+		return fromV5(stream);
 	}
 	
-	public static HwpFile from(InputStream stream) throws FileNotFoundException, IOException {
-		// TODO: 파일헤더로 정확한 버전 파악 필요
-		HwpFile hwp = HwpTextExtractorV5.extract(stream);
-		boolean encryptedHwpV5 = hwp.getHeader().isEncrypted();
-		
-		if (!hwp.valid() && !encryptedHwpV5) {
+	public static HwpFile fromV3(InputStream stream) {
+		HwpFile hwp = new HwpFile();
+		try {
 			hwp = HwpTextExtractorV3.extract(stream);
+		} catch (IOException e) {
+			hwp.error(e.getMessage());
+		}
+		
+		return hwp;
+	}
+	
+	public static HwpFile fromV5(InputStream stream) {
+		HwpFile hwp = new HwpFile();
+		try {
+			hwp = HwpTextExtractorV5.extract(stream);
+		} catch (IOException e) {
+			hwp.error(e.getMessage());
 		}
 		
 		return hwp;
