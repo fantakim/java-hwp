@@ -77,7 +77,7 @@ public class TestHwpReader {
 	
 	@Test
 	public void testLargeHwpFileRead() throws FileNotFoundException, IOException {
-		File largefile = new File("d:\\0c6da03373c445448c91d3b17775b9f9.hwp");
+		File largefile = new File("D:\\Documents\\hwp\\v5\\han_grammar.hwp");
 		HwpFile hwpFile = HwpReader.from(largefile);
 		
 		if(hwpFile.valid()){

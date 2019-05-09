@@ -32,11 +32,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class Hnc2String {
-	static Logger log = LoggerFactory.getLogger(Hnc2String.class);
 	static final String[] map = new String[65536]; // max : 0xFFFF
 
 	static {

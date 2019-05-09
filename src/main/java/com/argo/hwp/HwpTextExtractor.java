@@ -29,15 +29,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Writer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.argo.hwp.v3.HwpTextExtractorV3;
 import com.argo.hwp.v5.HwpTextExtractorV5;
 
 public abstract class HwpTextExtractor {
-	protected static Logger log = LoggerFactory.getLogger(HwpTextExtractor.class);
-
 	public static boolean extract(File source, Writer writer)
 			throws FileNotFoundException, IOException {
 		if (source == null || writer == null)

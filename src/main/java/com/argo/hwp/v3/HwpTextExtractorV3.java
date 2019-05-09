@@ -36,16 +36,11 @@ import java.util.zip.InflaterInputStream;
 
 import org.apache.poi.hpsf.PropertySetFactory;
 import org.apache.poi.hpsf.SummaryInformation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.argo.hwp.HwpFile;
 import com.argo.hwp.utils.HwpStreamReader;
 
 public abstract class HwpTextExtractorV3 {
-	private static Logger log = LoggerFactory
-			.getLogger(HwpTextExtractorV3.class);
-
 	// 1byte 문자들..
 	private static final byte[] HWP_V3_SIGNATURE = ("HWP Document File V3.00"
 			+ " \u001A\u0001\u0002\u0003\u0004\u0005").getBytes();
@@ -134,7 +129,7 @@ public abstract class HwpTextExtractorV3 {
 				if (!Arrays.equals(HWP_V3_SIGNATURE, buf))
 					return false;
 			} catch (IOException e) {
-				log.error("파일정보 확인 중 오류. HWP 포맷이 아닌 것으로 간주함", e);
+				//log.error("파일정보 확인 중 오류. HWP 포맷이 아닌 것으로 간주함", e);
 				return false;
 			}
 			
@@ -146,7 +141,7 @@ public abstract class HwpTextExtractorV3 {
 				// channel is closed as well.
 				input.close();
 			} catch (IOException e) {
-				log.warn("exception while file.close", e);
+				//log.warn("exception while file.close", e);
 			}
 		}
 	}
@@ -168,7 +163,7 @@ public abstract class HwpTextExtractorV3 {
 
 		// 압축 풀기
 		if (header.compressed) {
-			log.info("본문 압축 해제");
+			//log.info("본문 압축 해제");
 			input = new HwpStreamReader(new InflaterInputStream(inputStream,
 					new Inflater(true)));
 		}
@@ -204,14 +199,14 @@ public abstract class HwpTextExtractorV3 {
 		input.ensureSkip(96);
 		int t = input.uint16();
 		if (t != 0) {
-			log.error("암호화된 문서는 해석할 수 없습니다");
+			//log.error("암호화된 문서는 해석할 수 없습니다");
 			return false;
 		}
 
 		// 압축 확인
 		input.ensureSkip(26); // 124
 		boolean compressed = input.uint8() != 0;
-		log.debug("압축 확인 : {}", compressed);
+		//log.debug("압축 확인 : {}", compressed);
 
 		// 정보 블럭 길이
 		input.ensureSkip(1);
@@ -224,7 +219,7 @@ public abstract class HwpTextExtractorV3 {
 
 		// 압축 풀기
 		if (compressed) {
-			log.info("본문 압축 해제");
+			//log.info("본문 압축 해제");
 			input = new HwpStreamReader(new InflaterInputStream(inputStream,
 					new Inflater(true)));
 		}
@@ -282,7 +277,7 @@ public abstract class HwpTextExtractorV3 {
 			}
 		}
 
-		log.trace("n_chars = {}", n_chars);
+		//log.trace("n_chars = {}", n_chars);
 
 		// # 글자들
 		int n_chars_read = 0;
@@ -394,20 +389,20 @@ public abstract class HwpTextExtractorV3 {
 				if (c >= 0x0020 && c <= 0xffff) {// # hnc code range
 					String s = Hnc2String.convert(c);
 					if (s == null) {
-						log.warn("매핑 문자 없음 {}", Integer.toHexString(c));
+						//log.warn("매핑 문자 없음 {}", Integer.toHexString(c));
 						writer.write(unknown(c));
 					} else {
 						buf.append(s);
 						writer.write(s);
 					}
 				} else {
-					log.error("특수 문자 ? : {}", Integer.toHexString(c));
+					//log.error("특수 문자 ? : {}", Integer.toHexString(c));
 					// throw new NotImplementedException();
 				}
 			}
 		}
 
-		log.trace(">>> {}", buf.toString());
+		//log.trace(">>> {}", buf.toString());
 
 		return true;
 	}

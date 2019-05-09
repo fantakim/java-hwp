@@ -58,16 +58,13 @@ import org.apache.poi.poifs.filesystem.Entry;
 import org.apache.poi.poifs.filesystem.NDocumentInputStream;
 import org.apache.poi.poifs.filesystem.NPOIFSFileSystem;
 import org.apache.poi.util.LittleEndian;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 import com.argo.hwp.HwpFile;
 import com.argo.hwp.utils.HwpStreamReader;
 
 public abstract class HwpTextExtractorV5 {
-	protected static Logger log = LoggerFactory
-			.getLogger(HwpTextExtractorV5.class);
-
 	private static final byte[] HWP_V5_SIGNATURE = "HWP Document File"
 			.getBytes();
 
@@ -125,7 +122,7 @@ public abstract class HwpTextExtractorV5 {
 				try {
 					fs.close();
 				} catch (IOException e) {
-					log.warn("Exception", e);
+					//log.warn("Exception", e);
 				}
 			}
 		}
@@ -160,12 +157,12 @@ public abstract class HwpTextExtractorV5 {
 				header = getHeader(fs);
 				
 				if (header.encrypted) {
-					log.error("암호화된 문서는 해석할 수 없습니다");
+					//log.error("암호화된 문서는 해석할 수 없습니다");
 					return false;
 				}
 				
 			} catch (IOException e) {
-				log.warn("파일정보 확인 중 오류. HWP 포맷이 아닌 것으로 간주함", e);
+				//log.warn("파일정보 확인 중 오류. HWP 포맷이 아닌 것으로 간주함", e);
 				return false;
 			}
 
@@ -186,7 +183,7 @@ public abstract class HwpTextExtractorV5 {
 				try {
 					fs.close();
 				} catch (IOException e) {
-					log.warn("Exception", e);
+					//log.warn("Exception", e);
 				}
 			}
 		}
@@ -229,7 +226,7 @@ public abstract class HwpTextExtractorV5 {
 		fileHeader.version = HwpVersion.parseVersion(LittleEndian.getUInt(
 				header, 32));
 		long flags = LittleEndian.getUInt(header, 36);
-		log.debug("Flags={}", Long.toBinaryString(flags).replace(' ', '0'));
+		//log.debug("Flags={}", Long.toBinaryString(flags).replace(' ', '0'));
 
 		fileHeader.compressed = (flags & 0x01) == 0x01;
 		fileHeader.encrypted = (flags & 0x02) == 0x02;
@@ -295,7 +292,7 @@ public abstract class HwpTextExtractorV5 {
 			Entry entry = iterator.next();
 			if (entry.getName().startsWith("Section")
 					&& entry instanceof DocumentEntry) {
-				log.debug("extract {}", entry.getName());
+				//log.debug("extract {}", entry.getName());
 
 				InputStream input = new NDocumentInputStream(
 						(DocumentEntry) entry);
@@ -312,11 +309,11 @@ public abstract class HwpTextExtractorV5 {
 					try {
 						input.close();
 					} catch (IOException e) {
-						log.error("있을 수 없는 일?", e);
+						//log.error("있을 수 없는 일?", e);
 					}
 				}
 			} else {
-				log.warn("알수없는 Entry '{}'({})", entry.getName(), entry);
+				//log.warn("알수없는 Entry '{}'({})", entry.getName(), entry);
 			}
 		}
 	}
@@ -344,7 +341,7 @@ public abstract class HwpTextExtractorV5 {
 			Entry entry = iterator.next();
 			if (entry.getName().startsWith("Section")
 					&& entry instanceof DocumentEntry) {
-				log.debug("extract {}", entry.getName());
+				//log.debug("extract {}", entry.getName());
 
 				InputStream input = new NDocumentInputStream(
 						(DocumentEntry) entry);
@@ -370,11 +367,11 @@ public abstract class HwpTextExtractorV5 {
 					try {
 						input.close();
 					} catch (IOException e) {
-						log.error("있을 수 없는 일?", e);
+						//log.error("있을 수 없는 일?", e);
 					}
 				}
 			} else {
-				log.warn("알수없는 Entry '{}'({})", entry.getName(), entry);
+				//log.warn("알수없는 Entry '{}'({})", entry.getName(), entry);
 			}
 		}
 	}

@@ -29,11 +29,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.poi.util.LittleEndian;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HwpStreamReader {
-	private Logger log = LoggerFactory.getLogger(getClass());
 	private InputStream input;
 	private byte[] buf;
 
@@ -132,7 +129,7 @@ public class HwpStreamReader {
 	public void ensureSkip(long n) throws IOException {
 		long skipped = skip(n);
 		if (n != skipped) {
-			log.error("Skip failed {} => {}", n, skipped);
+			//log.error("Skip failed {} => {}", n, skipped);
 			throw new IOException();
 		}
 	}
